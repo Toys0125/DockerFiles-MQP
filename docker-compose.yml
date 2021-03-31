@@ -1,0 +1,29 @@
+version: "3.4"
+services:
+   musicpad:
+      image: toys0125/musicpad:latest
+      ports:
+         - "127.0.0.1:6000:8082"
+         - "127.0.0.1:6001:8080"
+      restart: always
+      labels:
+         "autoheal": "true"
+      volumes:
+         - mqpdb:/root/mqp/socketserver/db
+         - './config:/mnt/config'
+      healthcheck:
+         test: websocat -q -uU ws://localhost:8082 2> /dev/null || exit 1
+         interval: 1m
+         timeout: 5s
+         retries: 3
+         start_period: 40s
+   autoheal:
+    image: willfarrell/autoheal
+    container_name: autoheal
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+    environment:
+      - AUTOHEAL_INTERVAL=10
+      - CURL_TIMEOUT=30
+volumes:
+    mqpdb:
